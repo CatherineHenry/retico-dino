@@ -42,9 +42,15 @@ class Dinov2ObjectFeatures(retico_core.AbstractModule):
     @staticmethod
     def output_iu():
         return ObjectFeaturesIU
-    
 
-    def __init__(self, model_name = "dinov2_vits14", top_objects=1, show=False, **kwargs):
+    MODELS = [
+        "facebook/dino-vits8",
+        "facebook/dino-vits16",
+        "facebook/dino-vitb8",
+        "facebook/dino-vitb16",
+    ]
+    
+    def __init__(self, model_name = "dinov2_vits14", top_objects=1, show=False, save=False,  **kwargs):
         super().__init__(**kwargs)
 
         self.model_name = model_name
@@ -52,6 +58,7 @@ class Dinov2ObjectFeatures(retico_core.AbstractModule):
         self.model = None
         self.feature_extractor = None
         self.show = show
+        self.save = save
         self.queue = deque(maxlen=1)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -101,6 +108,10 @@ class Dinov2ObjectFeatures(retico_core.AbstractModule):
                     # img_to_show = np.asarray(sub)
                     cv2.imshow('image',sub) 
                     cv2.waitKey(1)
+                if self.save:
+                    import cv2
+                    img_to_save = np.asarray(sub)
+                    cv2.imwrite(f"./test_dino_sub_img/{i}.jpg", img_to_save)
                 # print(type(sub_img), type(detected_objects[sub_img]))
                 # sub_img = self.get_clip_subimage(image, obj)
             
