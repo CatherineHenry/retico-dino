@@ -94,7 +94,7 @@ class Dinov2ObjectFeatures(retico_core.AbstractModule):
             detected_objects = input_iu.extracted_objects
             object_features = {}
 
-            print("start dino processing")
+            print("Starting Dino processing")
             for i, sub_img in enumerate(detected_objects):
                 if i>=self.top_objects: break
                 # print(sub_img)
@@ -118,7 +118,8 @@ class Dinov2ObjectFeatures(retico_core.AbstractModule):
                 # inputs = self.feature_extractor(images=sub_img_list, return_tensors="pt")
                 # outputs = self.model(**inputs)
                 # last_hidden_states = outputs.last_hidden_state
-                img_tensor = self.feature_extractor(Image.fromarray(sub)).unsqueeze(0)#.to(self.device)
+                # img_tensor = self.feature_extractor(Image.fromarray(sub)).unsqueeze(0)#.to(self.device)
+                img_tensor = self.feature_extractor(sub).unsqueeze(0)#.to(self.device) # Catherine: to work with fb sam, not sure what changed between fb and hf sam modules
                 feat = self.model(img_tensor).squeeze(0).detach().numpy().tolist()
 
                 print(len(feat))
