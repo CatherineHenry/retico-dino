@@ -7,6 +7,8 @@ This module provides extracts features from DetectedObjectsIU using DINO.
 
 
 from collections import deque
+from datetime import datetime
+
 import numpy as np
 import threading
 import time
@@ -43,14 +45,7 @@ class Dinov2ObjectFeatures(retico_core.AbstractModule):
     def output_iu():
         return ObjectFeaturesIU
 
-    MODELS = [
-        "facebook/dino-vits8",
-        "facebook/dino-vits16",
-        "facebook/dino-vitb8",
-        "facebook/dino-vitb16",
-    ]
-    
-    def __init__(self, model_name = "dinov2_vits14", top_objects=1, show=False, save=False,  **kwargs):
+    def __init__(self, model_name = "dinov2_vits14", top_objects=1, show=False, save=False, **kwargs):
         super().__init__(**kwargs)
 
         self.model_name = model_name
@@ -99,6 +94,7 @@ class Dinov2ObjectFeatures(retico_core.AbstractModule):
             detected_objects = input_iu.extracted_objects
             object_features = {}
 
+            print("start dino processing")
             for i, sub_img in enumerate(detected_objects):
                 if i>=self.top_objects: break
                 # print(sub_img)
@@ -106,15 +102,15 @@ class Dinov2ObjectFeatures(retico_core.AbstractModule):
                 if self.show:
                     import cv2
                     # img_to_show = np.asarray(sub)
-                    cv2.imshow('image',sub) 
+                    cv2.imshow('image',sub)
                     cv2.waitKey(1)
                 if self.save:
                     import cv2
                     img_to_save = np.asarray(sub)
-                    cv2.imwrite(f"./test_dino_sub_img/{i}.jpg", img_to_save)
+                    cv2.imwrite(f"./test_dino_sub_img/{datetime.now().strftime('%m-%d_%H-%M-%S')}.jpg", img_to_save)
                 # print(type(sub_img), type(detected_objects[sub_img]))
                 # sub_img = self.get_clip_subimage(image, obj)
-            
+
 
                 # img = self.preprocess(sub_img).unsqueeze(0).to(self.device)
                 # yhat = self.model.encode_image(img).cpu().numpy()
