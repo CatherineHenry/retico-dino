@@ -136,7 +136,7 @@ class Dinov2ObjectFeatures(retico_core.AbstractModule):
                     object_features[i] = feat
 
             output_iu = self.create_iu(input_iu)
-            if len(object_features.keys) == 0:
+            if len(object_features.keys()) == 0:
                 output_iu.set_object_features(image, {})  # Whitespace scenario
             else:
                 output_iu.set_object_features(image, object_features)
