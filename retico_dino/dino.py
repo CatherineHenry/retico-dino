@@ -117,9 +117,10 @@ class Dinov2ObjectFeatures(retico_core.AbstractModule):
                         path.mkdir(parents=True, exist_ok=True)
                         file_name = f"{input_iu.flow_uuid}.png" # TODO: png or jpg better?
                         imwrite_path = f"{str(path)}/{file_name}"
-                        cv2.imwrite(imwrite_path, sub)
-                    # print(type(sub_img), type(detected_objects[sub_img]))
-                    # sub_img = self.get_clip_subimage(image, obj)
+                        # cv2.imwrite(imwrite_path, sub)
+                        # print(type(sub_img), type(detected_objects[sub_img]))
+                        sub.save(imwrite_path)
+                        # sub_img = self.get_clip_subimage(image, obj)
 
 
                     # img = self.preprocess(sub_img).unsqueeze(0).to(self.device)
