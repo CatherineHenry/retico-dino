@@ -8,6 +8,7 @@ This module provides extracts features from DetectedObjectsIU using DINO.
 
 from collections import deque
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import threading
@@ -56,6 +57,7 @@ class Dinov2ObjectFeatures(retico_core.AbstractModule):
         self.save = save
         self.queue = deque(maxlen=1)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.base_filepath = "./dino_output"
 
     def process_update(self, update_message):
         for iu, ut in update_message:
@@ -94,11 +96,13 @@ class Dinov2ObjectFeatures(retico_core.AbstractModule):
             detected_objects = input_iu.extracted_objects
             object_features = {}
 
-            print("Starting Dino processing")
+            print(f"Starting Dino processing {input_iu.flow_uuid}")
             for i, sub_img in enumerate(detected_objects):
                 if i>=self.top_objects: break
                 # print(sub_img)
                 sub = detected_objects[sub_img]
+                if sub is None:
+                    continue
                 if self.show:
                     import cv2
                     # img_to_show = np.asarray(sub)
@@ -106,8 +110,12 @@ class Dinov2ObjectFeatures(retico_core.AbstractModule):
                     cv2.waitKey(1)
                 if self.save:
                     import cv2
-                    img_to_save = np.asarray(sub)
-                    cv2.imwrite(f"./test_dino_sub_img/{datetime.now().strftime('%m-%d_%H-%M-%S')}.jpg", img_to_save)
+                    # img_to_save = np.asarray(sub)
+                    path = Path(f"{self.base_filepath}/{input_iu.execution_uuid}/")
+                    path.mkdir(parents=True, exist_ok=True)
+                    file_name = f"{input_iu.flow_uuid}.png" # TODO: png or jpg better?
+                    imwrite_path = f"{str(path)}/{file_name}"
+                    cv2.imwrite(imwrite_path, sub)
                 # print(type(sub_img), type(detected_objects[sub_img]))
                 # sub_img = self.get_clip_subimage(image, obj)
 
@@ -127,6 +135,9 @@ class Dinov2ObjectFeatures(retico_core.AbstractModule):
 
             output_iu = self.create_iu(input_iu)
             output_iu.set_object_features(image, object_features)
+            output_iu.set_flow_uuid(input_iu.flow_uuid)
+            output_iu.set_execution_uuid(input_iu.execution_uuid)
+            output_iu.set_motor_action(input_iu.motor_action)
             um = retico_core.UpdateMessage.from_iu(output_iu, retico_core.UpdateType.ADD)
             self.append(um)
 
