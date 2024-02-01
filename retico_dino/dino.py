@@ -98,11 +98,11 @@ class Dinov2ObjectFeatures(retico_core.AbstractModule):
 
             print(f"Starting Dino processing [{input_iu.flow_uuid}]")
             for i, sub_img in enumerate(detected_objects):
-                if i>=self.top_objects: break
+                if len(object_features.keys())>=self.top_objects: break
                 # print(sub_img)
                 sub = detected_objects[sub_img]
                 if sub is None:
-                    object_features[i] = None
+                    # object_features[i] = None
                     continue
                 else:
                     if self.show:
