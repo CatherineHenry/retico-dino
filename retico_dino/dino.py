@@ -5,6 +5,7 @@ DINO Module
 This module provides extracts features from DetectedObjectsIU using DINO.
 """
 
+import collections
 
 from collections import deque
 from datetime import datetime
@@ -97,44 +98,47 @@ class Dinov2ObjectFeatures(retico_core.AbstractModule):
             object_features = {}
 
             print(f"Starting Dino processing [{input_iu.flow_uuid}]")
-            for i, sub_img in enumerate(detected_objects):
-                if len(object_features.keys())>=self.top_objects: break
-                # print(sub_img)
-                sub = detected_objects[sub_img]
-                if sub is None:
-                    # object_features[i] = None
-                    continue
-                else:
-                    if self.show:
-                        import cv2
-                        # img_to_show = np.asarray(sub)
-                        cv2.imshow('image',sub)
-                        cv2.waitKey(1)
-                    if self.save:
-                        import cv2
-                        # img_to_save = np.asarray(sub)
-                        path = Path(f"{self.base_filepath}/{input_iu.execution_uuid}/")
-                        path.mkdir(parents=True, exist_ok=True)
-                        file_name = f"{input_iu.flow_uuid}.png" # TODO: png or jpg better?
-                        imwrite_path = f"{str(path)}/{file_name}"
-                        # cv2.imwrite(imwrite_path, sub)
-                        # print(type(sub_img), type(detected_objects[sub_img]))
-                        sub.save(imwrite_path)
-                        # sub_img = self.get_clip_subimage(image, obj)
+            if len(detected_objects) != 0:
+                # ordered dict, hoping SAM returns masks in order of confidence?
+                od = collections.OrderedDict(sorted(detected_objects.items(), reverse=True))
+                for i, sub_img in enumerate(od):
+                    if len(object_features.keys())>=self.top_objects: break
+                    # print(sub_img)
+                    sub = od[sub_img]
+                    if sub is None:
+                        # object_features[i] = None
+                        continue
+                    else:
+                        if self.show:
+                            import cv2
+                            # img_to_show = np.asarray(sub)
+                            cv2.imshow('image',sub)
+                            cv2.waitKey(1)
+                        if self.save:
+                            import cv2
+                            # img_to_save = np.asarray(sub)
+                            path = Path(f"{self.base_filepath}/{input_iu.execution_uuid}/")
+                            path.mkdir(parents=True, exist_ok=True)
+                            file_name = f"{input_iu.flow_uuid}.png" # TODO: png or jpg better?
+                            imwrite_path = f"{str(path)}/{file_name}"
+                            # cv2.imwrite(imwrite_path, sub)
+                            # print(type(sub_img), type(detected_objects[sub_img]))
+                            sub.save(imwrite_path)
+                            # sub_img = self.get_clip_subimage(image, obj)
 
 
-                    # img = self.preprocess(sub_img).unsqueeze(0).to(self.device)
-                    # yhat = self.model.encode_image(img).cpu().numpy()
-                    # object_features[i] = yhat.tolist()
-                    # inputs = self.feature_extractor(images=sub_img_list, return_tensors="pt")
-                    # outputs = self.model(**inputs)
-                    # last_hidden_states = outputs.last_hidden_state
-                    # img_tensor = self.feature_extractor(Image.fromarray(sub)).unsqueeze(0)#.to(self.device)
-                    img_tensor = self.feature_extractor(sub).unsqueeze(0)#.to(self.device) # Catherine: to work with fb sam, not sure what changed between fb and hf sam modules
-                    feat = self.model(img_tensor).squeeze(0).detach().numpy().tolist()
+                        # img = self.preprocess(sub_img).unsqueeze(0).to(self.device)
+                        # yhat = self.model.encode_image(img).cpu().numpy()
+                        # object_features[i] = yhat.tolist()
+                        # inputs = self.feature_extractor(images=sub_img_list, return_tensors="pt")
+                        # outputs = self.model(**inputs)
+                        # last_hidden_states = outputs.last_hidden_state
+                        # img_tensor = self.feature_extractor(Image.fromarray(sub)).unsqueeze(0)#.to(self.device)
+                        img_tensor = self.feature_extractor(sub).unsqueeze(0)#.to(self.device) # Catherine: to work with fb sam, not sure what changed between fb and hf sam modules
+                        feat = self.model(img_tensor).squeeze(0).detach().numpy().tolist()
 
-                    print(len(feat))
-                    object_features[i] = feat
+                        print(len(feat))
+                        object_features[i] = feat
 
             output_iu = self.create_iu(input_iu)
             if len(object_features.keys()) == 0:
